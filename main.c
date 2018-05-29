@@ -4,10 +4,11 @@
 
 static char *graph_file_name = "graph.pb";
 
-const char*
-load_graph_file(const char *filename, size_t *length)
+TF_Buffer
+load_graph_file(const char *filename)
 {
     FILE *fp;
+    TF_Buffer buff;
     if ((fp = fopen(filename, "r")) == NULL) {
         perror(filename);
         exit(EXIT_FAILURE);
@@ -20,10 +21,15 @@ load_graph_file(const char *filename, size_t *length)
     fread(data, 1, s, fp);
     fclose(fp);
 
-    *length = s;
-    return data;
+    buff.data = data;
+    buff.length = s;
+    return buff;
 }
 
+void
+tf_free_tensor(void *data, size_t len, void* arg) {
+    free(data);
+}
 
 /*
 https://medium.com/jim-fleming/loading-a-tensorflow-graph-with-the-c-api-4caaff88463f
@@ -31,6 +37,9 @@ https://medium.com/jim-fleming/loading-tensorflow-graphs-via-host-languages-be10
 
 Implementation example of the C API for swift:
 https://github.com/PerfectlySoft/Perfect-TensorFlow
+
+Load graph in C++
+https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/label_image/main.cc
  */
 int main(int argc, char **argv) 
 {
@@ -46,8 +55,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    TF_Buffer graph_def;
-    graph_def.data = load_graph_file(graph_file_name, &graph_def.length);
+    TF_Buffer graph_def = load_graph_file(graph_file_name);
 
     TF_ImportGraphDefOptions *graph_opts = TF_NewImportGraphDefOptions();
     TF_GraphImportGraphDef(graph, &graph_def, graph_opts, status);
@@ -56,7 +64,22 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    /* TODO */
+    int64_t *aDims = malloc(sizeof(int64_t) * 200);
+    int      aData[3];
+    /*
+    TF_Tensor *t1 = TF_NewTensor(TF_FLOAT,
+            aDims, 200, 
+            aData, 3, tf_free_tensor, NULL);
+            */
+
+    /*
+    TF_Tensor *t2 = TF_NewTensor(TF_FLOAT,
+            aDims, 0, 
+            aData, 3, free, 0);
+            */
+
+    //TF_SessionRun();
+
 
     TF_DeleteImportGraphDefOptions(graph_opts);
     TF_DeleteSession(session, status);
