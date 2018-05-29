@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <tensorflow/c/c_api.h>
 
+static char *graph_file_name = "graph.pb";
+
 const char*
 load_graph_file(const char *filename, size_t *length)
 {
@@ -22,6 +24,7 @@ load_graph_file(const char *filename, size_t *length)
     return data;
 }
 
+
 /*
 https://medium.com/jim-fleming/loading-a-tensorflow-graph-with-the-c-api-4caaff88463f
 https://medium.com/jim-fleming/loading-tensorflow-graphs-via-host-languages-be10fd81876f
@@ -29,8 +32,9 @@ https://medium.com/jim-fleming/loading-tensorflow-graphs-via-host-languages-be10
 Implementation example of the C API for swift:
 https://github.com/PerfectlySoft/Perfect-TensorFlow
  */
-void rungraph(const char *graph_file_name)
+int main(int argc, char **argv) 
 {
+    printf("Hello from TensorFlow C library version %s\n", TF_Version());
 
     TF_Graph *graph         = TF_NewGraph();
     TF_SessionOptions *opts = TF_NewSessionOptions();
@@ -43,9 +47,7 @@ void rungraph(const char *graph_file_name)
     }
 
     TF_Buffer graph_def;
-    size_t data_len;
-    graph_def.data = load_graph_file(graph_file_name, &data_len);
-    graph_def.length = data_len;
+    graph_def.data = load_graph_file(graph_file_name, &graph_def.length);
 
     TF_ImportGraphDefOptions *graph_opts = TF_NewImportGraphDefOptions();
     TF_GraphImportGraphDef(graph, &graph_def, graph_opts, status);
@@ -54,7 +56,7 @@ void rungraph(const char *graph_file_name)
         exit(EXIT_FAILURE);
     }
 
-
+    /* TODO */
 
     TF_DeleteImportGraphDefOptions(graph_opts);
     TF_DeleteSession(session, status);
@@ -62,12 +64,5 @@ void rungraph(const char *graph_file_name)
     TF_DeleteSessionOptions(opts);
     TF_DeleteGraph(graph);
 
-}
-
-int main(int argc, char **argv) 
-{
-    printf("Hello from TensorFlow C library version %s\n", TF_Version());
-    rungraph("graph.pb");
-
-    return 0;
+    exit(EXIT_SUCCESS);
 }
