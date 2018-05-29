@@ -1,3 +1,4 @@
 /cts
 *.o
+/data/mnist/*data
 
